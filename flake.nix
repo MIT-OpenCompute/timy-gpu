@@ -43,6 +43,7 @@
         {
           default = pkgs.mkShellNoCC {
             packages = with pkgs; [
+              jdk21
               scala
               sbt
               coursier
