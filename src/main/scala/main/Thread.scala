@@ -11,13 +11,13 @@ class Thread extends Module {
     val src_register = Input(Register());
     val dst_register = Input(Register());
     val immediate = Input(UInt(16.W));
-  
+
     val program_pointer = Output(UInt(8.W));
-    val end_of_program = Output(Bool()); 
+    val end_of_program = Output(Bool());
     val idle = Output(Bool());
     val debug_output = Output(UInt(8.W));
   })
-  
+
   val end_of_program = RegInit(false.B);
   val idle = RegInit(true.B);
 
@@ -34,7 +34,16 @@ class Thread extends Module {
 
   io.debug_output := alu.io.output;
 
-  // val lsu = Module(new Lsu())
+  val lsu = Module(new Lsu())
+  lsu.io.read := false.B;
+  lsu.io.write := false.B
+  lsu.io.address := 0.U;
+  lsu.io.data := 0.U;
+
+  val executing_load_write = RegInit(false.B);
+  val load_write_operation = RegInit(Operation.NoOp);
+  val load_write_address = RegInit(0.U(8.W));
+  val write_value = RegInit(0.U(8.W));
 
   val program_counter = Module(new ProgramCounter())
   program_counter.io.store_nzp := false.B;
@@ -49,8 +58,12 @@ class Thread extends Module {
   io.end_of_program := end_of_program;
   io.idle := idle;
 
-  when(io.dispatcher_opcode_loaded && io.dispatcher_program_pointer === program_counter.io.program_counter) {
-    when(io.operation === Operation.Add || io.operation === Operation.Mul || io.operation === Operation.Compare) {
+  when(
+    io.dispatcher_opcode_loaded && io.dispatcher_program_pointer === program_counter.io.program_counter
+  ) {
+    when(
+      io.operation === Operation.Add || io.operation === Operation.Mul || io.operation === Operation.Compare
+    ) {
       alu.io.execute := true.B;
       alu.io.operation := io.operation;
 
@@ -106,7 +119,7 @@ class Thread extends Module {
       io.idle := false.B;
     }
 
-    when(io.operation === Operation.MoveRegister) { 
+    when(io.operation === Operation.MoveRegister) {
       when(io.src_register === Register.A && io.dst_register === Register.B) {
         register_a := register_b
       }
@@ -126,7 +139,7 @@ class Thread extends Module {
       when(io.src_register === Register.C && io.dst_register === Register.A) {
         register_c := register_a
       }
-      
+
       when(io.src_register === Register.C && io.dst_register === Register.B) {
         register_c := register_b
       }
@@ -135,6 +148,53 @@ class Thread extends Module {
       program_counter.io.branch := false.B;
 
       io.idle := false.B;
+    }
+
+    when(
+      executing_load_write || io.operation === Operation.Write || io.operation === Operation.Load
+    ) {
+      io.idle := false.B;
+      executing_load_write := true.B;
+
+      val operation = WireInit(Operation.NoOp);
+      val address = WireInit(0.U(8.W));
+      val value = WireInit(0.U(8.W));
+
+      when(executing_load_write) {
+        operation := load_write_operation;
+        address := load_write_address;
+        value := write_value;
+      }.otherwise {
+        load_write_operation := io.operation;
+        operation := io.operation;
+
+        load_write_address := io.immediate;
+        address := io.immediate;
+
+        switch(io.src_register) {
+          is(Register.A) {
+            value := register_a;
+            write_value := register_a;
+          }
+          is(Register.B) {
+            value := register_b;
+            write_value := register_b;
+          }
+          is(Register.C) {
+            value := register_c;
+            write_value := register_c;
+          }
+        }
+      }
+
+      lsu.io.write := operation === Operation.Write;
+      lsu.io.read := operation === Operation.Load;
+
+      lsu.io
+
+      // when(io.operation)
+
+      when(executing_load_write) {}
     }
   }
 
