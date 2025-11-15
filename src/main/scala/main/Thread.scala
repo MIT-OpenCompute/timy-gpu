@@ -19,7 +19,6 @@ class Thread extends Module {
   })
 
   val end_of_program = RegInit(false.B);
-  val idle = RegInit(true.B);
 
   val register_a = RegInit(0.U(16.W));
   val register_b = RegInit(0.U(16.W));
@@ -56,7 +55,7 @@ class Thread extends Module {
   io.program_pointer := program_counter.io.program_counter;
 
   io.end_of_program := end_of_program;
-  io.idle := idle;
+  io.idle := false.B;
 
   when(
     io.dispatcher_opcode_loaded && io.dispatcher_program_pointer === program_counter.io.program_counter
@@ -151,7 +150,7 @@ class Thread extends Module {
     }
 
     when(
-      executing_load_write || io.operation === Operation.Write || io.operation === Operation.Load
+      io.operation === Operation.Write || io.operation === Operation.Load && !executing_load_write
     ) {
       io.idle := false.B;
       executing_load_write := true.B;
