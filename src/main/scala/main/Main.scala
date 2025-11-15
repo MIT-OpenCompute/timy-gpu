@@ -7,7 +7,7 @@ import _root_.circt.stage.ChiselStage
 object Main extends App {
     emitVerilog(new Alu(), Array("--target-dir", "generated"));
     emitVerilog(new Lsu(), Array("--target-dir", "generated"));
-    emitVerilog(new ProgramCounter(), Array("--target-dir", "generated"));
+    emitVerilog(new ProgramPointer(), Array("--target-dir", "generated"));
 
     test(new Lsu) { dut =>
         dut.io.write.poke(true.B);

@@ -74,15 +74,15 @@ class Core extends Module {
   io.debug_dispatcher_opcode := dispatcher.io.opcode;
   io.debug_dispatcher_program_pointer := dispatcher.io.program_pointer;
 
-  thread.io.dispatcher_opcode_loaded := dispatcher.io.opcode_loaded;
-  thread.io.dispatcher_program_pointer := dispatcher.io.program_pointer;
   thread.io.operation := dispatcher.io.opcode;
+  thread.io.operation_pointer := dispatcher.io.program_pointer;
   thread.io.src_register := dispatcher.io.src_register;
   thread.io.dst_register := dispatcher.io.dst_register;
   thread.io.immediate := Cat(
     dispatcher.io.read_immediate_u,
     dispatcher.io.read_immediate_l
   );
+  thread.io.operation_loaded := dispatcher.io.opcode_loaded;
 
   io.debug_thread_debug_output := thread.io.debug_output;
 }
