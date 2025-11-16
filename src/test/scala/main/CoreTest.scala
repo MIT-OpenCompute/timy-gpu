@@ -54,6 +54,9 @@ class CoreTest extends AnyFlatSpec with ChiselScalatestTester {
 
       println("[CoreTest]=====");
       dut.clock.step(1);
+
+      println("[CoreTest]=====");
+      dut.clock.step(1);
     }
   }
 }

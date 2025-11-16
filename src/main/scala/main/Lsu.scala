@@ -37,7 +37,7 @@ class Lsu extends Module {
   val read_requested = RegInit(false.B);
   io.read_requested := read_requested;
 
-  val read_address = RegInit(false.B);
+  val read_address = RegInit(0.U(16.W));
   io.read_address := read_address;
 
   val write_requested = RegInit(false.B);

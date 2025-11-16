@@ -44,7 +44,9 @@ class Thread extends Module {
   val operation_loaded_register = RegInit(false.B);
   val operation_loaded = WireInit(false.B);
 
-  when(program_pointer.io.pointer === io.operation_pointer && io.operation_loaded) {
+  when(
+    program_pointer.io.pointer === io.operation_pointer && io.operation_loaded
+  ) {
     operation_register := io.operation;
     operation_pointer_register := io.operation_pointer;
     src_register_register := io.src_register;
@@ -57,16 +59,16 @@ class Thread extends Module {
     src_register := io.src_register;
     dst_register := io.dst_register;
     immediate := io.immediate;
-    operation_loaded := true.B; 
+    operation_loaded := true.B;
   }.otherwise {
     operation := operation_register;
     operation_pointer := operation_pointer_register;
     src_register := src_register_register;
     dst_register := dst_register_register;
     immediate := immediate_register;
-    operation_loaded := operation_loaded_register; 
+    operation_loaded := operation_loaded_register;
   }
-  
+
   val end_of_program = RegInit(false.B);
 
   val register_a = RegInit(0.U(16.W));
@@ -246,6 +248,8 @@ class Thread extends Module {
     printf(p"\n\t\tRead requested=${io.read_requested}");
     printf(p"\n\t\tRead ready=${io.read_ready}");
     printf(p"\n\t\tLsu state=${lsu.io.state}");
+    printf(p"\n\t\tprogram pointer update=${program_pointer.io.update}");
+    printf(p"\n\t\tprogram pointer branch=${program_pointer.io.branch}");
     printf(p"\n\n");
   }
 }
