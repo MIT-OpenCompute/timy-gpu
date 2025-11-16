@@ -231,6 +231,43 @@ class Thread extends Module {
         program_pointer.io.branch := false.B;
       }
     }
+
+    when(
+      io.operation === Operation.Write
+    ) {
+      io.idle := false.B;
+
+      lsu.io.write := true.B;
+
+      switch(src_register) {
+        is(Register.A) {
+          lsu.io.address := register_a;
+        }
+        is(Register.B) {
+          lsu.io.address := register_b;
+        }
+        is(Register.C) {
+          lsu.io.address := register_c;
+        }
+      }
+
+      switch(dst_register) {
+        is(Register.A) {
+          register_a := lsu.io.output
+        }
+        is(Register.B) {
+          register_b := lsu.io.output
+        }
+        is(Register.C) {
+          register_c := lsu.io.output
+        }
+      }
+
+      when(lsu.io.state === LsuState.Done) {
+        program_pointer.io.update := true.B;
+        program_pointer.io.branch := false.B;
+      }
+    }
   }
 
   when(true.B) {
