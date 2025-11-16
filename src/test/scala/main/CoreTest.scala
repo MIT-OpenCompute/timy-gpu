@@ -8,7 +8,7 @@ class CoreTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.debug_memory_write.poke(true.B);
       dut.io.debug_memory_write_address.poke(0.U(8.W));
       dut.io.debug_memory_write_data_0.poke(0b00001010.U(8.W));
-      dut.io.debug_memory_write_data_1.poke(0b01000000.U(8.W));
+      dut.io.debug_memory_write_data_1.poke(0b00011110.U(8.W));
       dut.io.debug_memory_write_data_2.poke(0b00000000.U(8.W));
 
       println("[CoreTest]=====");
@@ -16,16 +16,16 @@ class CoreTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.io.debug_memory_write.poke(true.B);
       dut.io.debug_memory_write_address.poke(1.U(8.W));
-      dut.io.debug_memory_write_data_0.poke(0b00001000.U(8.W));
-      dut.io.debug_memory_write_data_1.poke(0b00100010.U(8.W));
+      dut.io.debug_memory_write_data_0.poke(0b00011000.U(8.W));
+      dut.io.debug_memory_write_data_1.poke(0b00000010.U(8.W));
       dut.io.debug_memory_write_data_2.poke(0b00000000.U(8.W));
 
       println("[CoreTest]=====");
       dut.clock.step(1);
 
       dut.io.debug_memory_write.poke(true.B);
-      dut.io.debug_memory_write_address.poke(2.U(8.W));
-      dut.io.debug_memory_write_data_0.poke(0b00100000.U(8.W));
+      dut.io.debug_memory_write_address.poke(10.U(8.W));
+      dut.io.debug_memory_write_data_0.poke(0b00000101.U(8.W));
       dut.io.debug_memory_write_data_1.poke(0b00000000.U(8.W));
       dut.io.debug_memory_write_data_2.poke(0b00000000.U(8.W));
 

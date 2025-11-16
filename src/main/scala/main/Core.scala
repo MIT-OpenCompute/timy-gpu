@@ -14,8 +14,6 @@ class Core extends Module {
 
     val debug_dispatcher_opcode = Output(Operation());
     val debug_dispatcher_program_pointer = Output(UInt(8.W));
-
-    val debug_thread_debug_output = Output(UInt(8.W));
   });
 
   val memory = Module(new Memory());
@@ -33,6 +31,20 @@ class Core extends Module {
     .readPorts(2)
     .address := 3.U * dispatcher.io.read_program_pointer + 2.U;
 
+  memory.io.readPorts(3).enable := thread.io.read_requested;
+  memory.io
+    .readPorts(3)
+    .address := thread.io.read_address;
+  memory.io.readPorts(4).enable := thread.io.read_requested;
+  memory.io
+    .readPorts(4)
+    .address := thread.io.read_address + 1.U;
+
+  thread.io.read_data := memory.io.readPorts(4).data ## memory.io.readPorts(3).data;
+  
+  val thread_read_ready_delayed = RegNext(thread.io.read_requested, false.B);
+  thread.io.read_ready := thread_read_ready_delayed;
+
   memory.io.writePorts(0).enable := io.debug_memory_write;
   memory.io.writePorts(0).address := io.debug_memory_write_address * 3.U;
   memory.io.writePorts(0).data := io.debug_memory_write_data_0;
@@ -46,8 +58,8 @@ class Core extends Module {
   dispatcher.io.thread_requesting_opcode := thread.io.idle && io.execute;
   dispatcher.io.thread_program_pointer := thread.io.program_pointer;
 
-  val read_ready_delayed = RegNext(dispatcher.io.read_requested, false.B);
-  dispatcher.io.read_ready := read_ready_delayed;
+  val dispatcher_read_ready_delayed = RegNext(dispatcher.io.read_requested, false.B);
+  dispatcher.io.read_ready := dispatcher_read_ready_delayed;
   dispatcher.io.read_opcode := memory.io.readPorts(0).data(7, 0);
   dispatcher.io.read_immediate_l := memory.io.readPorts(1).data(7, 0);
   dispatcher.io.read_immediate_u := memory.io.readPorts(2).data(7, 0);
@@ -83,6 +95,4 @@ class Core extends Module {
     dispatcher.io.read_immediate_l
   );
   thread.io.operation_loaded := dispatcher.io.opcode_loaded;
-
-  io.debug_thread_debug_output := thread.io.debug_output;
 }

@@ -14,7 +14,11 @@ class Thread extends Module {
     val program_pointer = Output(UInt(8.W));
     val end_of_program = Output(Bool());
     val idle = Output(Bool());
-    val debug_output = Output(UInt(8.W));
+
+    val read_requested = Output(Bool());
+    val read_address = Output(UInt(16.W));
+    val read_ready = Input(Bool());
+    val read_data = Input(UInt(16.W));
   })
 
   val program_pointer = Module(new ProgramPointer())
@@ -76,13 +80,18 @@ class Thread extends Module {
   alu.io.rs := 0.U(8.W);
   alu.io.rt := 0.U(8.W);
 
-  io.debug_output := alu.io.output;
+  val lsu = Module(new Lsu())
+  lsu.io.read := false.B;
+  lsu.io.write := false.B
+  lsu.io.address := 0.U;
+  lsu.io.data := 0.U;
 
-  // val lsu = Module(new Lsu())
-  // lsu.io.read := false.B;
-  // lsu.io.write := false.B
-  // lsu.io.address := 0.U;
-  // lsu.io.data := 0.U;
+  lsu.io.read_ready := io.read_ready;
+  lsu.io.read_data := io.read_data;
+  io.read_address := lsu.io.read_address;
+  io.read_requested := lsu.io.read_requested;
+
+  lsu.io.write_ready := false.B;
 
   val executing_load_write = RegInit(false.B);
   val load_write_operation = RegInit(Operation.NoOp);
@@ -184,65 +193,59 @@ class Thread extends Module {
       io.idle := false.B;
     }
 
-    // when(
-    //   io.operation === Operation.Write || io.operation === Operation.Load && !executing_load_write
-    // ) {
-    //   io.idle := false.B;
-    //   executing_load_write := true.B;
+    when(
+      io.operation === Operation.Load
+    ) {
+      io.idle := false.B;
 
-    //   val operation = WireInit(Operation.NoOp);
-    //   val address = WireInit(0.U(8.W));
-    //   val value = WireInit(0.U(8.W));
+      lsu.io.read := true.B;
 
-    //   when(executing_load_write) {
-    //     operation := load_write_operation;
-    //     address := load_write_address;
-    //     value := write_value;
-    //   }.otherwise {
-    //     load_write_operation := io.operation;
-    //     operation := io.operation;
+      switch(src_register) {
+        is(Register.A) {
+          lsu.io.address := register_a;
+        }
+        is(Register.B) {
+          lsu.io.address := register_b;
+        }
+        is(Register.C) {
+          lsu.io.address := register_c;
+        }
+      }
 
-    //     load_write_address := io.immediate;
-    //     address := io.immediate;
+      switch(dst_register) {
+        is(Register.A) {
+          register_a := lsu.io.output
+        }
+        is(Register.B) {
+          register_b := lsu.io.output
+        }
+        is(Register.C) {
+          register_c := lsu.io.output
+        }
+      }
 
-    //     switch(io.src_register) {
-    //       is(Register.A) {
-    //         value := register_a;
-    //         write_value := register_a;
-    //       }
-    //       is(Register.B) {
-    //         value := register_b;
-    //         write_value := register_b;
-    //       }
-    //       is(Register.C) {
-    //         value := register_c;
-    //         write_value := register_c;
-    //       }
-    //     }
-    //   }
-
-    //   lsu.io.write := operation === Operation.Write;
-    //   lsu.io.read := operation === Operation.Load;
-
-    //   // when(io.operation)
-
-    //   when(executing_load_write) {}
-    // }
+      when(lsu.io.state === LsuState.Done) {
+        program_pointer.io.update := true.B;
+        program_pointer.io.branch := false.B;
+      }
+    }
   }
 
   when(true.B) {
     printf(p"\t[Thread]=====");
-    printf(p"\n\t\tio.operation=${io.operation}");
-    printf(p"\n\t\tio.operation_pointer=${io.operation_pointer}");
-    printf(p"\n\t\tio.operation_loaded=${io.operation_loaded}");
+    printf(p"\n\t\toperation=${operation}");
+    printf(p"\n\t\toperation_pointer=${operation_pointer}");
+    printf(p"\n\t\toperation_loaded=${operation_loaded}");
     printf(p"\n\t\tprogram_pointer=${program_pointer.io.pointer}");
     printf(p"\n\t\tio.idle=${io.idle}");
-    printf(p"\n\t\tio.debug_output=${io.debug_output}");
     printf(p"\n\t\ta=${register_a}");
     printf(p"\n\t\tb=${register_b}");
     printf(p"\n\t\tc=${register_c}");
     printf(p"\n\t\tSrc Register=${io.src_register}");
     printf(p"\n\t\tDst Register=${io.dst_register}");
+    printf(p"\n\t\tRead requested=${io.read_requested}");
+    printf(p"\n\t\tRead ready=${io.read_ready}");
+    printf(p"\n\t\tLsu state=${lsu.io.state}");
     printf(p"\n\n");
   }
 }

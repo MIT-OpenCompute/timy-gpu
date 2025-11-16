@@ -34,7 +34,7 @@ The instruction set is 24 bits wide. 8 for opcode and 16 additional bits for imm
 	`00001` + target --> moves immediate into register
 	`00010` + src/dst --> moves value in register to register
 - load
-	`00011` + src/dst --> takes address from register and loads memory into other register
+	`00011` + src/dst --> takes address from register and loads memory into other register. The src and dst registers must not be the same register.
 - add
 	`00100` + src/dst --> add value in src to dst and store in dst
 - mul
